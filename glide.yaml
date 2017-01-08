@@ -1,0 +1,21 @@
+package: github.com/linki/deputy
+import:
+- package: github.com/Sirupsen/logrus
+  version: ~0.11.0
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: google.golang.org/api
+  subpackages:
+  - compute/v0.beta
+- package: gopkg.in/alecthomas/kingpin.v2
+  version: ~2.2.3
+- package: k8s.io/client-go
+  version: ~2.0.0-alpha.1
+  subpackages:
+  - kubernetes
+  - pkg/api/v1
+  - rest
