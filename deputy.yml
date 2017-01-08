@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: deputy
+  labels:
+    app: deputy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: deputy
+    spec:
+      containers:
+      - name: deputy
+        image: quay.io/linki/deputy:latest
+        args:
+        - --project=some-project
+        - --zone=europe-west1-d
+        - --in-cluster
+        - --interval=1h
+        - --debug
+        imagePullPolicy: Always
