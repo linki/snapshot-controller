@@ -1,19 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: deputy
+  name: snapshot-controller
   labels:
-    app: deputy
+    app: snapshot-controller
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: deputy
+        app: snapshot-controller
     spec:
       containers:
-      - name: deputy
-        image: quay.io/linki/deputy:latest
+      - name: snapshot-controller
+        image: quay.io/linki/snapshot-controller:latest
         args:
         - --project=some-project
         - --zone=europe-west1-d

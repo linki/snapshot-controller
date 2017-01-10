@@ -214,7 +214,7 @@ func calculateSnapshotName(diskName string) string {
 func calculateSnapshotLabels(diskName string, pvl *v1.PersistentVolumeList) map[string]string {
 	labels := make(map[string]string)
 
-	labels["heritage"] = "deputy"
+	labels["heritage"] = "snapshot-controller"
 
 	for _, pv := range pvl.Items {
 		if diskName == pv.Spec.GCEPersistentDisk.PDName {

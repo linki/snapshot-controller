@@ -1,4 +1,4 @@
-package: github.com/linki/deputy
+package: github.com/linki/snapshot-controller
 import:
 - package: github.com/Sirupsen/logrus
   version: ~0.11.0

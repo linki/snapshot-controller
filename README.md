@@ -1,7 +1,7 @@
-# deputy
+# snapshot-controller
 
-`Deputy` snapshots the GCE Persistent Disks that are backing your Kubernetes
-Persistent Volumes.
+`snapshot-controller` snapshots the GCE Persistent Disks that are backing your
+Kubernetes Persistent Volumes.
 
 # Purpose
 
@@ -11,15 +11,15 @@ of the most popular implementations of Persistent Volumes are GCE Persistent
 Disks and AWS EBS volumes. Both of them have the ability to be snapshotted while
 they are attached to a node.
 
-`Deputy` is a controller in your cluster that finds any Persistent Volumes
-backed by GCE Persistent Disks and regularly takes a snapshot of them.
+`snapshot-controller` runs in your cluster that finds any Persistent
+Volumesbacked by GCE Persistent Disks and regularly takes a snapshot of them.
 
 # Usage
 
 ```
-$ go get -u github.com/linki/deputy
+$ go get -u github.com/linki/snapshot-controller
 $ kubectl proxy &
-$ deputy --project=some-project --zone=europe-west1-d --interval=1h
+$ snapshot-controller --project=some-project --zone=europe-west1-d --interval=1h
 INFO[0000] Found the following Kubernetes Persistent Volumes:
 INFO[0000]   gke-somename-29c0222a--pvc-01d45471-c249-11e6-a767-42010a8400d7
 ...
@@ -39,7 +39,8 @@ INFO[0050] Sleeping for 1h0m0s...
 If you're running inside the same Kubernetes cluster as the PVs you want to
 snapshot, you can use the `--in-cluster` flag instead of using `kubectl proxy`.
 
-See [deputy.yml](deputy.yml) for an example Deployment manifest.
+See [snapshot-controller.yml](snapshot-controller.yml) for an example Deployment
+manifest.
 
 # Caveats
 
