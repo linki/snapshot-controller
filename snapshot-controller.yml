@@ -19,5 +19,6 @@ spec:
         - --zone=europe-west1-d
         - --in-cluster
         - --interval=1h
+        - --retain=48
         - --debug
         imagePullPolicy: Always
