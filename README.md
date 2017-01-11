@@ -33,6 +33,9 @@ INFO[0002]   gke-somename-29c0222a--pvc-01d45471-c249-11e6-a767-42010a8-1wus (fo
 INFO[0002] Going to create the following snapshots:
 INFO[0002]   gke-somename-29c0222a--pvc-01d45471-c249-11e6-a767-42010a8400d7 -> gke-somename-29c0222a--pvc-01d45471-c249-11e6-a767-42010a8-onjf
 ...
+INFO[0042] Going to delete the following expired snapshots:
+INFO[0042]   gke-somename-29c0222a--pvc-01d45471-c249-11e6-a767-42010a8-9okp
+...
 INFO[0050] Sleeping for 1h0m0s...
 ```
 

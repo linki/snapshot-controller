@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: snapshot-controller
-        image: quay.io/linki/snapshot-controller:v0.1.0
+        image: quay.io/linki/snapshot-controller:v0.2.1
         args:
         - --project=some-project
         - --zone=europe-west1-d
