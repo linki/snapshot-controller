@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -26,12 +27,15 @@ const (
 	operationPollDelay    = 2 * time.Second
 	statusDone            = "DONE"
 	defaultInterval       = "1h"
+	defaultRetain         = "48"
+	heritageLabel         = "snapshot-controller"
 )
 
 var (
 	project   string
 	zone      string
 	interval  time.Duration
+	retain    int
 	inCluster bool
 	once      bool
 	dryRun    bool
@@ -47,10 +51,17 @@ type SnapshotConfiguration struct {
 	Labels         map[string]string
 }
 
+type newestFirst []compute.Snapshot
+
+func (ss newestFirst) Len() int           { return len(ss) }
+func (ss newestFirst) Swap(i, j int)      { ss[i], ss[j] = ss[j], ss[i] }
+func (ss newestFirst) Less(i, j int) bool { return ss[i].CreationTimestamp > ss[j].CreationTimestamp }
+
 func init() {
 	kingpin.Flag("project", "The ID of GCP project.").Required().StringVar(&project)
 	kingpin.Flag("zone", "The name of the zone the disks live in.").Required().StringVar(&zone)
 	kingpin.Flag("interval", "Interval between Pod terminations").Default(defaultInterval).DurationVar(&interval)
+	kingpin.Flag("retain", "The maximum number of snapshots to retain per disk.").Default(defaultRetain).IntVar(&retain)
 	kingpin.Flag("in-cluster", "If true, finds the Kubernetes cluster from the environment").BoolVar(&inCluster)
 	kingpin.Flag("once", "Run once and exit").BoolVar(&once)
 	kingpin.Flag("dry-run", "If true, don't create any snapshots.").BoolVar(&dryRun)
@@ -129,7 +140,20 @@ func main() {
 			log.Infof("  %s -> %s", sc.SourceDiskName, sc.SnapshotName)
 		}
 
+		ess := calculateExpiredSnapshots(sl)
+
+		log.Info("Going to delete the following expired snapshots:")
+
+		for _, s := range ess {
+			log.Infof("  %s", s.Name)
+		}
+
 		err = createSnapshots(scs, gce, dryRun)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = deleteSnapshots(ess, gce, dryRun)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -214,7 +238,7 @@ func calculateSnapshotName(diskName string) string {
 func calculateSnapshotLabels(diskName string, pvl *v1.PersistentVolumeList) map[string]string {
 	labels := make(map[string]string)
 
-	labels["heritage"] = "snapshot-controller"
+	labels["heritage"] = heritageLabel
 
 	for _, pv := range pvl.Items {
 		if diskName == pv.Spec.GCEPersistentDisk.PDName {
@@ -271,6 +295,73 @@ func createSnapshots(scs []SnapshotConfiguration, gce *compute.Service, dryRun b
 			time.Sleep(operationPollDelay)
 
 			op, err = gce.GlobalOperations.Get(sc.Project, op.Name).Do()
+			if err != nil {
+				return err
+			}
+
+			log.Debug(op.Status)
+		}
+	}
+
+	return nil
+}
+
+func calculateExpiredSnapshots(sl *compute.SnapshotList) []compute.Snapshot {
+	sm := make(map[string][]compute.Snapshot)
+
+	for _, s := range sl.Items {
+		if s.Labels["heritage"] != heritageLabel {
+			continue
+		}
+
+		sm[s.SourceDisk] = append(sm[s.SourceDisk], *s)
+	}
+
+	for _, ss := range sm {
+		sort.Sort(newestFirst(ss))
+	}
+
+	log.Debugf("Snapshots grouped by source disk and ordered by creation time:")
+
+	for sn, ss := range sm {
+		sourceDisk, _ := url.Parse(sn)
+		parts := strings.Split(sourceDisk.String(), "/")
+		sourceDiskName := parts[len(parts)-1]
+
+		log.Debugf("%s", sourceDiskName)
+
+		for _, s := range ss {
+			log.Debugf("  %s (%s)", s.Name, s.CreationTimestamp)
+		}
+	}
+
+	rss := make([]compute.Snapshot, 0)
+
+	for sn := range sm {
+		if len(sm[sn]) > retain {
+			rss = append(rss, sm[sn][retain:len(sm[sn])]...)
+		}
+	}
+
+	return rss
+}
+
+func deleteSnapshots(scs []compute.Snapshot, gce *compute.Service, dryRun bool) error {
+	if dryRun {
+		log.Info("Dry run enabled. Skipping real snapshot deletion.")
+		return nil
+	}
+
+	for _, s := range scs {
+		op, err := gce.Snapshots.Delete(project, s.Name).Do()
+		if err != nil {
+			return err
+		}
+
+		for op.Status != statusDone {
+			time.Sleep(operationPollDelay)
+
+			op, err = gce.GlobalOperations.Get(project, op.Name).Do()
 			if err != nil {
 				return err
 			}
