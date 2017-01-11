@@ -172,7 +172,7 @@ func filterKubernetesPersistentVolumesByGCEPersistentDisks(pvl *v1.PersistentVol
 	fl := &v1.PersistentVolumeList{}
 
 	for _, pv := range pvl.Items {
-		if pv.Spec.GCEPersistentDisk.PDName != "" {
+		if pv.Spec.GCEPersistentDisk != nil {
 			fl.Items = append(fl.Items, pv)
 		}
 	}
