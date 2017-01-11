@@ -52,7 +52,7 @@ This is a very early state and there are many things that need improvement:
 * Limited to a GKE cluster (a custom deployed cluster on GCE should also work)
 * Limited to a single zone (disks in other zones won't be found)
 * Runs, takes snapshots, sleeps. It will do this on every restart of the
-  process. It also doesn't clean up old snapshots.
+  process.
 * Takes a snapshots at any time, regardless how your disk is used at that time.
 
 # Related Work
