@@ -94,7 +94,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		pvl = filterKubernetesPersistentVolumesByGCEPersistentDisks(pvl)
+		pvl = filterByPersistentDisks(pvl)
 
 		log.Info("Found the following Kubernetes Persistent Volumes:")
 
@@ -107,7 +107,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		dl = filterGCEPersistentDisksByKubernetesPersistentVolumes(dl, pvl)
+		dl = filterByPersistentVolumes(dl, pvl)
 
 		log.Info("Found the following Google Cloud Engine Persistent Disks:")
 
@@ -120,7 +120,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		sl = filterGCESnapshotsByGCEPersistentDisks(sl, dl)
+		sl = filterBySourceDisks(sl, dl)
 
 		log.Info("Found the following Google Cloud Engine Snapshots:")
 
@@ -168,7 +168,7 @@ func main() {
 	}
 }
 
-func filterKubernetesPersistentVolumesByGCEPersistentDisks(pvl *v1.PersistentVolumeList) *v1.PersistentVolumeList {
+func filterByPersistentDisks(pvl *v1.PersistentVolumeList) *v1.PersistentVolumeList {
 	fl := &v1.PersistentVolumeList{}
 
 	for _, pv := range pvl.Items {
@@ -180,7 +180,7 @@ func filterKubernetesPersistentVolumesByGCEPersistentDisks(pvl *v1.PersistentVol
 	return fl
 }
 
-func filterGCEPersistentDisksByKubernetesPersistentVolumes(dl *compute.DiskList, pvl *v1.PersistentVolumeList) *compute.DiskList {
+func filterByPersistentVolumes(dl *compute.DiskList, pvl *v1.PersistentVolumeList) *compute.DiskList {
 	fl := &compute.DiskList{}
 
 	for _, d := range dl.Items {
@@ -194,7 +194,7 @@ func filterGCEPersistentDisksByKubernetesPersistentVolumes(dl *compute.DiskList,
 	return fl
 }
 
-func filterGCESnapshotsByGCEPersistentDisks(sl *compute.SnapshotList, dl *compute.DiskList) *compute.SnapshotList {
+func filterBySourceDisks(sl *compute.SnapshotList, dl *compute.DiskList) *compute.SnapshotList {
 	fl := &compute.SnapshotList{}
 
 	for _, s := range sl.Items {
